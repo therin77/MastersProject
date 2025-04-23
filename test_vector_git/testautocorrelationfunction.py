@@ -22,6 +22,7 @@ from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
 import sip
 import testautocorrelationfunction_epy_block_1 as epy_block_1  # embedded python block
+import testautocorrelationfunction_epy_block_2 as epy_block_2  # embedded python block
 
 
 
@@ -117,6 +118,7 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_0_win = sip.wrapinstance(self.qtgui_time_sink_x_0.qwidget(), Qt.QWidget)
         self.top_layout.addWidget(self._qtgui_time_sink_x_0_win)
+        self.epy_block_2 = epy_block_2.blk(window=1, length=1024)
         self.epy_block_1 = epy_block_1.blk(additionFlag=True)
         self.analog_sig_source_x_1 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 1000, 1, 0, 3.14)
         self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 1000, 1, 0, 0)
@@ -127,7 +129,8 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
         ##################################################
         self.connect((self.analog_sig_source_x_0, 0), (self.epy_block_1, 0))
         self.connect((self.analog_sig_source_x_1, 0), (self.epy_block_1, 1))
-        self.connect((self.epy_block_1, 0), (self.qtgui_time_sink_x_0, 0))
+        self.connect((self.epy_block_1, 0), (self.epy_block_2, 0))
+        self.connect((self.epy_block_2, 0), (self.qtgui_time_sink_x_0, 0))
 
 
     def closeEvent(self, event):

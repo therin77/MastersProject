@@ -90,9 +90,27 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [64, 416.0]
+    coordinate: [32, 384.0]
     rotation: 0
     state: enabled
+- name: blocks_file_sink_0
+  id: blocks_file_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    append: 'False'
+    comment: ''
+    file: C:\Users\Kate\OSUProject\MastersProject\test_file
+    type: complex
+    unbuffered: 'False'
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1024, 448.0]
+    rotation: 0
+    state: disabled
 - name: epy_block_1
   id: epy_block
   parameters:
@@ -128,6 +146,48 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [496, 268.0]
+    rotation: 0
+    state: enabled
+- name: epy_block_2
+  id: epy_block
+  parameters:
+    _source_code: "\n\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.sync_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"\"\"Embedded Python Block\
+      \ example - a simple multiply const\"\"\"\n\n    def __init__(self, window=1.0,\
+      \ length=1024):  # only default arguments here\n        \"\"\"arguments to this\
+      \ function show up as parameters in GRC\"\"\"\n        gr.sync_block.__init__(\n\
+      \            self,\n            name='Correlation/Synch Block',   # will show\
+      \ up in GRC\n            in_sig=[np.complex64],\n            out_sig=[np.complex64]\n\
+      \        )\n        # if an attribute with the same name as a parameter is found,\n\
+      \        # a callback is registered (properties work, too).\n        self.window\
+      \ = window\n        self.length = length\n\n    def work(self, input_items,\
+      \ output_items):\n        \"\"\"example: multiply with constant\"\"\"\n\n  \
+      \      in_data = np.array(input_items[0])\n\n        if len(in_data) < self.length:\n\
+      \            return 0\n\n        in_data = np.concatenate([np.zeros(self.length,\
+      \ dtype=np.complex64)])\n\n        corr_data = np.correlate(in_data, in_data)\n\
+      \n        #output_items[0][:] = input_items[0][:]*len(corr_data)\n        print(self.length)\n\
+      \        print(len(in_data)-1)\n        \n        #Problem is here         \n\
+      \        output_items[0][:self.length] = corr_data[len(in_data):]\n        \n\
+      \        return len(output_items[0])\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    length: '1024'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    window: '1'
+  states:
+    _io_cache: ('Correlation/Synch Block', 'blk', [('window', '1.0'), ('length', '1024')],
+      [('0', 'complex', 1)], [('0', 'complex', 1)], 'Embedded Python Block example
+      - a simple multiply const', ['length', 'window'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [808, 180.0]
     rotation: 0
     state: enabled
 - name: qtgui_time_sink_x_0
@@ -224,14 +284,15 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [792, 244.0]
+    coordinate: [768, 396.0]
     rotation: 0
     state: enabled
 
 connections:
 - [analog_sig_source_x_0, '0', epy_block_1, '0']
 - [analog_sig_source_x_1, '0', epy_block_1, '1']
-- [epy_block_1, '0', qtgui_time_sink_x_0, '0']
+- [epy_block_1, '0', epy_block_2, '0']
+- [epy_block_2, '0', qtgui_time_sink_x_0, '0']
 
 metadata:
   file_format: 1
