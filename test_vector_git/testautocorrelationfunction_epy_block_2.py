@@ -1,10 +1,9 @@
 
 """
-Embedded Python Blocks:
+Correlation/Sync Block
+Developed by Kate Gothberg
+Last Edited: 5/9/25
 
-Each time this file is saved, GRC will instantiate the first class it finds
-to get ports and parameters of your block. The arguments to __init__  will
-be the parameters. All of them are required to have default values!
 """
 
 
@@ -12,39 +11,49 @@ import numpy as np
 from gnuradio import gr
 
 
-class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
-    """Embedded Python Block example - a simple multiply const"""
-
-    def __init__(self, window=1.0, length=1024):  # only default arguments here
-        """arguments to this function show up as parameters in GRC"""
+class blk(gr.sync_block):
+    
+    """
+    initialize the block
+    params:
+        in_sig: input samples
+        out_sig: output samples
+        window: number of samples to correlate over
+    """
+    def __init__(self, window=1.0):  
         gr.sync_block.__init__(
             self,
-            name='Correlation/Synch Block',   # will show up in GRC
+            name='Correlation/Synch Block', 
             in_sig=[np.complex64],
             out_sig=[np.complex64]
         )
-        # if an attribute with the same name as a parameter is found,
-        # a callback is registered (properties work, too).
         self.window = window
-        self.length = length
 
+    """
+    functional code over samples
+    """
     def work(self, input_items, output_items):
-        """example: multiply with constant"""
 
-        in_data = np.array(input_items[0])
+        samples = input_items[0] #rename input samples
+        symbol_buffer = []       #storage for each block of samples
 
-        if len(in_data) < self.length:
-            return 0
+        #iterate for all samples
+        for i, sample in enumerate(samples):
 
-        in_data = np.concatenate([np.zeros(self.length, dtype=np.complex64)])
+            #add to sample block
+            symbol_buffer.append(samples[i])
 
-        corr_data = np.correlate(in_data, in_data)
+            #if block is full continue processing
+            if len(symbol_buffer) > self.window:
 
-        #output_items[0][:] = input_items[0][:]*len(corr_data)
-        print(self.length)
-        print(len(in_data)-1)
-        
-                  
-        output_items[0][:self.length] = corr_data[len(in_data):]
-        
+                
+                #correlation and reset of buffer
+                corr_data = np.correlate(symbol_buffer, symbol_buffer, "full")
+                symbol_buffer = []
+
+                #output correlation samples
+                for j in range(len(corr_data)-1):
+                    print(corr_data[j])
+                    output_items[0][j] = corr_data[j]
+
         return len(output_items[0])
