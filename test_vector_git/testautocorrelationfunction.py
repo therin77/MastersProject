@@ -60,7 +60,7 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 50e6
+        self.samp_rate = samp_rate = 122880
 
         ##################################################
         # Blocks
@@ -70,7 +70,7 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
         self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
         self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, 'C:\\Users\\Kate\\OSUProject\\MastersProject\\test_file', False)
         self.blocks_file_sink_0.set_unbuffered(False)
-        self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, 297e6, 1000, 0, 0)
+        self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, (1/60), 1000, 0, 0)
 
 
         ##################################################
