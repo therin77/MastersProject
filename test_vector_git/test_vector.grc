@@ -4,11 +4,7 @@ options:
     catch_exceptions: 'True'
     category: '[GRC Hier Blocks]'
     cmake_opt: ''
-    comment: 'toDO
-
-      -add visualization of correlation
-
-      -add function to maximize correlation coeff'
+    comment: "toDO\n-add rational resampler\n\t-esp expander/interpolator"
     copyright: ''
     description: ''
     gen_cmake: 'On'
@@ -41,7 +37,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '122880'
+    value: 5e6
   states:
     bus_sink: false
     bus_source: false
@@ -102,7 +98,7 @@ blocks:
     alias: ''
     append: 'False'
     comment: ''
-    file: C:\Users\Kate\OSUProject\MastersProject\test_file
+    file: C:\Users\Kate\OSUProject\MastersProject\test_file_interp
     type: complex
     unbuffered: 'False'
     vlen: '1'
@@ -110,7 +106,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1024, 448.0]
+    coordinate: [1064, 460.0]
     rotation: 0
     state: enabled
 - name: blocks_throttle2_0
@@ -133,7 +129,7 @@ blocks:
     bus_structure: null
     coordinate: [624, 80.0]
     rotation: 0
-    state: enabled
+    state: disabled
 - name: epy_block_1
   id: epy_block
   parameters:
@@ -177,39 +173,46 @@ blocks:
     Px: '1920'
     Py: '1080'
     _source_code: "\n\"\"\"\nCorrelation/Sync Block\nDeveloped by Kate Gothberg\n\
-      Last Edited: 5/14/25\n\n\"\"\"\n\nimport numpy as np\nfrom gnuradio import gr\n\
-      \nclass blk(gr.sync_block):\n    \n    \"\"\"\n    initialize the block\n  \
-      \  params:\n        in_sig: input samples\n        out_sig: output samples\n\
-      \        Px: number of pixels x axis\n        Py: number of pixels y axis\n\
-      \        fv: refresh rate of monitor\n        samp_rate: sampling rate of gnu\n\
-      \    \"\"\"\n    def __init__(self, Px=1920.0, Py= 1080.0, fv = 60.0, samp_rate\
-      \ = 50e6):  \n        gr.sync_block.__init__(\n            self,\n         \
-      \   name='Correlation/Synch Block', \n            in_sig=[np.complex64],\n \
-      \           out_sig=[np.complex64]\n        )\n        self.Px = Px\n      \
-      \  self.Py = Py\n        self.fv = fv\n        self.samp_rate = samp_rate\n\n\
-      \    \"\"\"\n    functional code over samples\n    \"\"\"\n    def work(self,\
+      Last Edited: 5/15/25\n\n\"\"\"\n\nimport numpy as np\nfrom gnuradio import gr\n\
+      \nclass blk(gr.interp_block):   #gr.sync_block\n    \n    \"\"\"\n    initialize\
+      \ the block\n    params:\n        in_sig: input samples\n        out_sig: output\
+      \ samples\n        Px: number of pixels x axis\n        Py: number of pixels\
+      \ y axis\n        fv: refresh rate of monitor\n        samp_rate: sampling rate\
+      \ of gnu\n    \"\"\"\n    def __init__(self, Px=1920.0, Py= 1080.0, fv = 60.0,\
+      \ samp_rate = 50e6):  \n        gr.sync_block.__init__(\n            self,\n\
+      \            name='Correlation/Synch Block', \n            in_sig=[np.complex64],\n\
+      \            out_sig=[np.complex64]\n        )\n        self.Px = Px\n     \
+      \   self.Py = Py\n        self.fv = fv\n        self.samp_rate = samp_rate\n\
+      \n    \"\"\"\n    functional code over samples\n    \"\"\"\n    def work(self,\
       \ input_items, output_items):\n\n        samples = input_items[0] #rename input\
       \ samples\n        symbol_buffer = []       #storage for each block of samples\n\
       \        symbol_buffer_prev = []  #storage of previous block/ frame\n      \
       \  Tv = 1/(self.fv)         #length of frame in time\n        window = np.floor(Tv\
       \ * self.samp_rate)  #number of samples per frame \n\n\n        #iterate for\
-      \ all samples\n        for i, sample in enumerate(samples):\n\n            #add\
-      \ to sample block\n            symbol_buffer.append(samples[i])\n\n        \
-      \    #if block is full continue processing\n            if len(symbol_buffer)\
+      \ all samples\n        for i, sample in enumerate(samples):\n\n            \"\
+      \"\"\n            Determine autocorr and max point\n            \"\"\"\n\n \
+      \           #add to sample block\n            symbol_buffer.append(samples[i])\n\
+      \n            #if block is full continue processing\n            if len(symbol_buffer)\
       \ == window:\n\n                if len(symbol_buffer_prev) == window:\n    \n\
       \                    #correlation and reset of buffer\n                    corr_data\
-      \ = np.correlate(symbol_buffer, symbol_buffer_prev, \"full\")\n            \
-      \        corr_data = corr_data / window\n\n                    #output correlation\
-      \ samples\n                    for j in range(len(corr_data)-1):\n         \
-      \               output_items[0][j] = corr_data[j]\n\n                    corr_data\
-      \ = []\n\n                #reset symbol_buffer and allocate prev buffer\n  \
-      \              symbol_buffer_prev = symbol_buffer\n                symbol_buffer\
-      \ = []\n\n        return len(output_items[0])\n"
+      \ = np.correlate(symbol_buffer, symbol_buffer_prev, \"same\")\n            \
+      \        corr_data = corr_data / window\n\n                    middle = np.argmax(corr_data)\n\
+      \n                    corr_data = []\n                \n                #reset\
+      \ symbol_buffer and allocate prev buffer\n                symbol_buffer_prev\
+      \ = symbol_buffer\n                symbol_buffer = []\n\n            \"\"\"\n\
+      \            Linear Interpolator: Samples\n            \n            V = self.Py\n\
+      \            H = np.floor(self.Px*self.samp_rate/self.fv)\n            \n  \
+      \          zeros_array = np.zeros(5000) #np.zeros(self.Px*self.Py-1) #np.zeros(1024)\n\
+      \            output = np.append(zeros_array, samples[i])\n            for j\
+      \ in range(len(output)-5):\n                    output_items[0][j] = output[j]\n\
+      \n\n            \n            #output_items[0][i*(self.Px*self.Py):(i+1)*(self.Px*self.Py)]\
+      \ = np.append(zeros_array, samples[i])\n            \"\"\"\n\n            #output_items[0][i]\
+      \ = samples[i]\n        \n        return len(output_items[0])\n"
     affinity: ''
     alias: ''
     comment: ''
     fv: '60'
-    maxoutbuf: '0'
+    maxoutbuf: '10000'
     minoutbuf: '0'
     samp_rate: samp_rate
   states:
@@ -222,15 +225,38 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [824, 172.0]
+    coordinate: [768, 216.0]
     rotation: 0
-    state: enabled
+    state: disabled
+- name: rational_resampler_xxx_0
+  id: rational_resampler_xxx
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    decim: '1024'
+    fbw: '0'
+    interp: '1'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    taps: '[]'
+    type: ccc
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [768, 504.0]
+    rotation: 0
+    state: bypassed
 
 connections:
 - [analog_sig_source_x_0, '0', blocks_throttle2_0, '0']
+- [analog_sig_source_x_0, '0', epy_block_2, '0']
+- [analog_sig_source_x_0, '0', rational_resampler_xxx_0, '0']
 - [analog_sig_source_x_1, '0', epy_block_1, '1']
 - [blocks_throttle2_0, '0', epy_block_2, '0']
 - [epy_block_2, '0', blocks_file_sink_0, '0']
+- [rational_resampler_xxx_0, '0', blocks_file_sink_0, '0']
 
 metadata:
   file_format: 1

@@ -12,8 +12,9 @@ from PyQt5 import Qt
 from gnuradio import qtgui
 from gnuradio import analog
 from gnuradio import blocks
-from gnuradio import gr
+from gnuradio import filter
 from gnuradio.filter import firdes
+from gnuradio import gr
 from gnuradio.fft import window
 import sys
 import signal
@@ -21,7 +22,6 @@ from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
-import testautocorrelationfunction_epy_block_2 as epy_block_2  # embedded python block
 
 
 
@@ -60,15 +60,13 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.samp_rate = samp_rate = 122880
+        self.samp_rate = samp_rate = 5e6
 
         ##################################################
         # Blocks
         ##################################################
 
-        self.epy_block_2 = epy_block_2.blk(Px=1920, Py=1080, fv=60, samp_rate=samp_rate)
-        self.blocks_throttle2_0 = blocks.throttle( gr.sizeof_gr_complex*1, samp_rate, True, 0 if "auto" == "auto" else max( int(float(0.1) * samp_rate) if "auto" == "time" else int(0.1), 1) )
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, 'C:\\Users\\Kate\\OSUProject\\MastersProject\\test_file', False)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, 'C:\\Users\\Kate\\OSUProject\\MastersProject\\test_file_interp', False)
         self.blocks_file_sink_0.set_unbuffered(False)
         self.analog_sig_source_x_0 = analog.sig_source_c(samp_rate, analog.GR_COS_WAVE, (1/60), 1000, 0, 0)
 
@@ -76,9 +74,7 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_throttle2_0, 0))
-        self.connect((self.blocks_throttle2_0, 0), (self.epy_block_2, 0))
-        self.connect((self.epy_block_2, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.analog_sig_source_x_0, 0), (self.blocks_file_sink_0, 0))
 
 
     def closeEvent(self, event):
@@ -95,8 +91,6 @@ class testautocorrelationfunction(gr.top_block, Qt.QWidget):
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
         self.analog_sig_source_x_0.set_sampling_freq(self.samp_rate)
-        self.blocks_throttle2_0.set_sample_rate(self.samp_rate)
-        self.epy_block_2.samp_rate = self.samp_rate
 
 
 
