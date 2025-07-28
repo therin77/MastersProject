@@ -6,27 +6,33 @@
 
 #ToDo:
     #-SDR real time
-    #-SDR samples to test
-    #-avg M
+    #-delay
     #-image in same spot/pane
     #-reverse image colors
     #-multithread
 
+##################################
+#Modules
+##################################
+
 #import uhd
 import numpy as np
 from scipy.signal import resample_poly, correlate
-import PIL
 from matplotlib import pyplot as plt
 import time
 
 #for now grab samples from file, hope to implement in real-time
-f = np.fromfile(open("test_file_50M"), dtype=np.complex64)
-samples = f[0: 20*2*833334]
+f = np.fromfile(open("test_file_50M_long"), dtype=np.complex64)
+samples = f[0: len(f) ] #30*2*833334]
 
 """
 usrp = uhd.usrp.MultiUSRP("type=b200")
 usrp.set_rx_freq(100e6)
 """
+
+##################################
+#Constants
+##################################
 
 fv = 60                                #frame rate
 samp_rate = 50e6 #122880               #sample rate of SDR
@@ -45,12 +51,19 @@ M_inst = 0                             #M of single frame examined
 del_buff = 0                           #delay length (samples)
 counter = 0                            #number of frames examined, do process 1/s ie after 60 frames
 
+##################################
+#Main Program
+##################################
+
 start_time = time.time()
 #iterate for all samples
-for i, sample in enumerate(samples):
+
+while True:
 
     #add to current sample block for autocorr
-    symbol_buffer.append(samples[i])
+    symbol_buffer = samples[(counter+1)*833333:(counter+2)*833333]
+    symbol_buffer_prev = samples[counter*833333:(counter+1)*833333]
+    
 
     #if block is full continue processing
     if len(symbol_buffer) == window:
@@ -58,13 +71,12 @@ for i, sample in enumerate(samples):
         #iterate counter for video gui
         counter = counter + 1
         
-        if counter % 10 == 0:
+        if counter % 30 == 0:
             
             end_time = time.time()
 
             #if two symbol buffers perform autocorr and rat resample
             if len(symbol_buffer_prev) == window:
-                
     
                 ##################################
                 #Autocorrelation => M
@@ -110,6 +122,7 @@ for i, sample in enumerate(samples):
             ##################################
             #Normalize
             ##################################
+            
             gain = 256/np.max(real)
             amp_real = real*gain
     
@@ -117,30 +130,32 @@ for i, sample in enumerate(samples):
             #Display
             ##################################
         
+            #reshape to correct number of rows, then interpolate down the columns
             rows = int(V)
             cols = int(np.floor(len(amp_real)/V))
             del_len = len(amp_real) - rows*cols
             amp_real = amp_real[:-del_len]
             matrix = np.reshape(amp_real,(rows,cols))
             
-            plt.figure(1); plt.clf()
+            #plot using plt, turn off axis
+            plt.figure(clear=True)
+            plt.figure(1);
             plt.imshow(matrix)
-            plt.title('Number')
+            plt.axis('off')
             plt.pause(.1)
             
-            #reset counter
-            counter = 0
+            #timing
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            print(f"Elapsed time using time.time(): {elapsed_time:.6f} seconds")
             
-            #screen = PIL.Image.fromarray(matrix)
-            #screen.show()
         else:
             
             #reset symbol_buffer and allocate prev buffer
             symbol_buffer_prev = symbol_buffer
             symbol_buffer = []
 
-
-#end_time = time.time()
+ 
 
 # Calculate and print the elapsed time
 elapsed_time = end_time - start_time
