@@ -1,13 +1,11 @@
 ##################################
 #Master's Project OSU: gr-tempest implemntation in Python
 #Developed by: Kate Gothberg
-#Last Edited: 09/02/2025
+#Last Edited: 09/03/2025
 ##################################
 
 #ToDo:
-    #-SDR real time
     #-delay
-    #-image in same spot/pane
     #-reverse image colors
     #-optimize
     
@@ -77,22 +75,13 @@ def interpolate(Py, amp_real)   :
 #display : graph monitor
 #inputs:
 #   -matrix : reshaped samples to be displayed
-def display(matrix)   :
+#   -ax1 : initialize plot for display 
+def display(matrix, ax1)   :
     
-    """
-    plt.figure(clear=True)
-    plt.figure(1)
-    plt.imshow(matrix)
-    plt.axis('off')
+    im1 = ax1.imshow(matrix)
+    im1.set_data(matrix)
     plt.pause(.1)
-    """
-
-    #work on this concept
-    fig = plt.figure()
-    fig.canvas.imshow(matrix)
-    plt.axis('off')
-    plt.pause(.1)
-    fig.canvas.flush_events()
+    
     
 ##################################
 #Imported Modules
@@ -137,9 +126,8 @@ M_list = []                            #list of all M's calculated
 M_inst = 0                             #M of single frame examined
 del_buff = 0                           #delay length (samples)
 counter = 0                            #number of frames examined, do process 1/s ie after 60 frames
-
-plt.ion()
-
+plt.ion()                              #initialize plt interactive for display
+ax1 = plt.subplot(111)                 #initialize plt plot for display
 
 #samples from file
 f = np.fromfile(open("samples_082725"), dtype=np.complex64)    #"samples_082525"), dtype=np.complex64)
@@ -213,7 +201,7 @@ while True:
             matrix = interpolate(Py, amp_real)
             
             #plot using plt, turn off axis
-            display(matrix)
+            display(matrix, ax1)
             
             #timing
             end_time = time.time()

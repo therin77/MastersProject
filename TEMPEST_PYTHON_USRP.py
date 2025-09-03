@@ -1,13 +1,11 @@
 ##################################
 #Master's Project OSU: gr-tempest implemntation in Python
 #Developed by: Kate Gothberg
-#Last Edited: 09/01/2025
+#Last Edited: 09/03/2025
 ##################################
 
 #ToDo:
-    #-SDR real time
     #-delay
-    #-image in same spot/pane
     #-reverse image colors
     #-optimize
     
@@ -33,8 +31,6 @@ def autocorrelation(symbol_buffer, symbol_buffer_prev, M_list, M)   :
     M_inst = np.argmax(corr_data)
     M_list = np.append(M_list, M_inst)
     M = np.floor(np.mean(M_list))
-    
-    print(M_list)
     
     return(M, M_list)
 
@@ -77,12 +73,11 @@ def interpolate(Py, amp_real)   :
 #display : graph monitor
 #inputs:
 #   -matrix : reshaped samples to be displayed
-def display(matrix)   :
+#   -ax1 : initialize plot for display 
+def display(matrix, ax1)   :
     
-    plt.figure(clear=True)
-    plt.figure(1);
-    plt.imshow(matrix)
-    plt.axis('off')
+    im1 = ax1.imshow(matrix)
+    im1.set_data(matrix)
     plt.pause(.1)
     
 ##################################
@@ -128,6 +123,8 @@ M_list = []                            #list of all M's calculated
 M_inst = 0                             #M of single frame examined
 del_buff = 0                           #delay length (samples)
 counter = 0                            #number of frames examined, do process 1/s ie after 60 frames
+plt.ion()                              #initialize plt interactive for display
+ax1 = plt.subplot(111)                 #initialize plt plot for display
 
 #debug, for time inbetween frames
 start_time = time.time()
@@ -135,7 +132,6 @@ window_int = int(window)
 
 #initialize USRP
 usrp = uhd.usrp.MultiUSRP("num_recv_frames=1000")
-
 
 #main loop
 while True:
@@ -204,7 +200,7 @@ while True:
             matrix = interpolate(Py, amp_real)
             
             #plot using plt, turn off axis
-            display(matrix)
+            display(matrix, ax1)
             
             #timing
             end_time = time.time()
