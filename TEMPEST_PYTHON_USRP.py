@@ -1,7 +1,7 @@
 ##################################
 #Master's Project OSU: gr-tempest implemntation in Python
 #Developed by: Kate Gothberg
-#Last Edited: 09/03/2025
+#Last Edited: 09/05/2025
 ##################################
 
 #ToDo:
@@ -127,7 +127,7 @@ plt.ion()                              #initialize plt interactive for display
 ax1 = plt.subplot(111)                 #initialize plt plot for display
 
 #debug, for time inbetween frames
-start_time = time.time()
+#start_time = time.time()
 window_int = int(window)
 
 #initialize USRP
@@ -203,12 +203,12 @@ while True:
             display(matrix, ax1)
             
             #timing
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            print(f"Elapsed time using time.time(): {elapsed_time:.6f} seconds")
+            #end_time = time.time()
+            #elapsed_time = end_time - start_time
+            #print(f"Elapsed time using time.time(): {elapsed_time:.6f} seconds")
                 
  
 
 # Calculate and print the elapsed time
-elapsed_time = end_time - start_time
-print(f"Elapsed time using time.time(): {elapsed_time:.6f} seconds")
+#elapsed_time = end_time - start_time
+#print(f"Elapsed time using time.time(): {elapsed_time:.6f} seconds")
